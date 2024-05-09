@@ -1,0 +1,55 @@
+# This is a basic workflow to help you get started with Actions
+
+name: First CI by SG
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  hello_world:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+
+      # Runs a single command using the runners shell
+      - name: Run a one-line script
+        run: echo Hello, world!
+
+      # Create the directory
+      - name: Create directory and file
+        run: |
+          cd ./
+          rm -rf Produuction_backup
+          mkdir Produuction_backup
+          cd Produuction_backup
+          echo "This is Production Data , Dont play with it" >> prod_data_backup.txt
+      # This will install the AWS CLI
+      - name: Install AWS CLI v2
+        run:  |
+                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+                unzip -q /tmp/awscliv2.zip -d /tmp
+                rm /tmp/awscliv2.zip
+                sudo /tmp/aws/install --update
+                rm -rf /tmp/aws/
+
+      - name: Upload to S3
+        run: |
+          aws s3 sync ./Produuction_backup/prod_data_backup.txt s3://sgactions
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: 'us-east-1'
